@@ -1,4 +1,4 @@
-from flask import Flask, jsonify
+from flask import Flask, jsonify, request
 from mem0 import MemoryClient
 import os
 import requests
@@ -59,6 +59,21 @@ def get_memories():
 def test_telegram():
     send_telegram("Coucou Pierre, ce message vient de Render ! 🧠✨")
     return "Message Telegram envoyé !"
+
+# 📝 Nouvelle route pour sauvegarder automatiquement les réflexions
+@app.route('/save_memory', methods=['POST'])
+def save_memory():
+    try:
+        data = request.get_json()
+        content = data.get("content")
+        if not content:
+            return jsonify({"status": "error", "message": "missing content"}), 400
+
+        client = MemoryClient(api_key=API_KEY)
+        result = client.add(content, user_id=USER_ID, metadata={"category": "humanite"})
+        return jsonify({"status": "ok", "result": result})
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=10000)
